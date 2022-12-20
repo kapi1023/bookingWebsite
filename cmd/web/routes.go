@@ -5,13 +5,12 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
-	"github.com/kapi1023/bookingWebsite/packages/config"
-	"github.com/kapi1023/bookingWebsite/packages/handlers"
+	"github.com/kapi1023/bookingWebsite/internal/config"
+	"github.com/kapi1023/bookingWebsite/internal/handlers"
 )
 
 func routes(app *config.AppConfig) http.Handler {
 	mux := chi.NewRouter()
-
 	mux.Use(middleware.Recoverer)
 	mux.Use(NoSurf)
 	mux.Use(SessionLoad)
@@ -20,10 +19,15 @@ func routes(app *config.AppConfig) http.Handler {
 	mux.Get("/about", handlers.Repo.About)
 	mux.Get("/generals-quarters", handlers.Repo.Generals)
 	mux.Get("/majors-suite", handlers.Repo.Majors)
+
 	mux.Get("/search-availability", handlers.Repo.Availability)
+	mux.Post("/search-availability", handlers.Repo.PostAvailability)
+	mux.Post("/search-availability-json", handlers.Repo.JsonAvailability)
+
 	mux.Get("/contact", handlers.Repo.Contact)
 
 	mux.Get("/make-reservation", handlers.Repo.Reservation)
+	mux.Post("/make-reservation", handlers.Repo.PostReservation)
 
 	fileServer := http.FileServer(http.Dir("./static/"))
 	mux.Handle("/static/*", http.StripPrefix("/static", fileServer))
