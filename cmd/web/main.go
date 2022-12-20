@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/alexedwards/scs/v2"
-	"github.com/kapi1023/bookingWebsite/packages/config"
-	"github.com/kapi1023/bookingWebsite/packages/handlers"
-	render "github.com/kapi1023/bookingWebsite/packages/renders"
+	"github.com/kapi1023/bookingWebsite/internal/config"
+	"github.com/kapi1023/bookingWebsite/internal/handlers"
+	render "github.com/kapi1023/bookingWebsite/internal/renders"
 )
 
 const portNumber = ":8080"

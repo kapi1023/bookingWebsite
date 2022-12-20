@@ -3,6 +3,7 @@
     <html lang="en">
 
     <head>
+        <!-- Required meta tags -->
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
@@ -216,21 +217,22 @@
                     title = "",
                 } = c;
 
-                const { value: result } = await Swal.fire({
+                const { value: formValues } = await Swal.fire({
                     title: title,
                     html: msg,
                     backdrop: false,
                     focusConfirm: false,
                     showCancelButton: true,
                     willOpen: () => {
-                        if (c.willOpen !== undefined) {
-                            c.willOpen();
-                        }
+                        const elem = document.getElementById("reservation-dates-modal");
+                        const rp = new DateRangePicker(elem, {
+                            format: 'yyyy-mm-dd',
+                            showOnFocus: true,
+                        })
                     },
                     didOpen: () => {
-                        if (c.didOpen !== undefined){
-                            c.didOpen();
-                        }
+                        document.getElementById("start").removeAttribute("disabled");
+                        document.getElementById("end").removeAttribute("disabled");
                     },
                     preConfirm: () => {
                         return [
@@ -240,18 +242,8 @@
                     }
                 })
 
-                if (result) {
-                    if (result.dismiss !== Swal.DismissReason.cancel) {
-                        if (result.value !== "") {
-                            if (c.callback !== undefined) {
-                                c.callback(result);
-                            }
-                        } else {
-                            c.callback(false);
-                        }
-                    } else {
-                        c.callback(false);
-                    }
+                if (formValues) {
+                    Swal.fire(JSON.stringify(formValues))
                 }
             }
 
