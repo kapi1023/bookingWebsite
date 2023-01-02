@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/gob"
 	"fmt"
 	"log"
 	"net/http"
@@ -9,6 +10,7 @@ import (
 	"github.com/alexedwards/scs/v2"
 	"github.com/kapi1023/bookingWebsite/internal/config"
 	"github.com/kapi1023/bookingWebsite/internal/handlers"
+	"github.com/kapi1023/bookingWebsite/internal/models"
 	render "github.com/kapi1023/bookingWebsite/internal/renders"
 )
 
@@ -19,6 +21,9 @@ var session *scs.SessionManager
 
 // main is the main function
 func main() {
+	//what is store in session
+	gob.Register(models.Reservation{})
+
 	// change this to true when in production
 	app.InProduction = false
 
@@ -33,7 +38,8 @@ func main() {
 
 	tc, err := render.CreateTemplateCache()
 	if err != nil {
-		log.Fatal("cannot create template cache")
+		log.Println("cannot create template cache")
+		log.Fatal(err)
 	}
 
 	app.TemplateCache = tc
