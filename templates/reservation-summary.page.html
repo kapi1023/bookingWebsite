@@ -12,15 +12,15 @@
                     <tbody>
                         <tr>
                             <td>Name:</td>
-                            <td>{{$res.FirstName}}</td>
+                            <td>{{$res.FirstName}} {{$res.LastName}}</td>
                         </tr>
                         <tr>
                             <td>Arrival:</td>
-                            <td>{{$res.StartDate}}</td>
+                            <td>{{index .StringMap "start_date"}}</td>
                         </tr>
                         <tr>
                             <td>Departure:</td>
-                            <td>{{$res.EndDate}}</td>
+                            <td>{{index .StringMap "end_date"}}</td>
                         </tr>
                         <tr>
                             <td>Email:</td>
@@ -31,8 +31,8 @@
                             <td>{{$res.Phone}}</td>
                         </tr>
                                                 <tr>
-                            <td>RoomId:</td>
-                            <td>{{$res.RoomId}}</td>
+                            <td>RoomName:</td>
+                            <td>{{$res.Room.RoomName}}</td>
                         </tr>
                     </tbody>
                 </table>

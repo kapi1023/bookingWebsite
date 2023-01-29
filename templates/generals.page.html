@@ -65,7 +65,6 @@
                         <div class="col">
                             <input disabled required class="form-control" type="text" name="end" id="end" placeholder="Departure">
                         </div>
-
                     </div>
                 </div>
             </div>
@@ -79,6 +78,7 @@
                         const rp = new DateRangePicker(elem, {
                             format: 'yyyy-mm-dd',
                             showOnFocus: true,
+                            mindDate: new Date(),
                         })
                     },
             didOpen: () => {
@@ -89,16 +89,38 @@
 
                 let form = document.getElementById("check-availability-form");
                 let formData = new FormData(form);
-                formData.append("csrf_token","{{.CSRFToken}}")
+                formData.append("csrf_token","{{.CSRFToken}}");
+                formData.append("room_id","1");
 
                 fetch('/search-availability-json',{
                     method: "post",
                     body: formData,
+                    
                 })
                     .then(response => response.json())
                     .then(data => {
-                        console.log(data);
-                        console.log(data.ok);
+                        if (data.ok){
+                        console.log("room is available")
+                        attention.custom({
+                                showConfirmButton: false,
+                                icon: 'success',
+                                msg: '<p>Room is available!</p>'
+                                    +'<p> <a href="/book-room?id='
+                                    +data.room_id
+                                    +'&s='
+                                    +data.start_date
+                                    +'&e='
+                                    +data.end_date
+                                    +'" class="btn btn-primary">'
+                                    +'Book Now!</a></p>'
+
+                            })
+                        }else{
+                        console.log("room is not available")
+                            attention.error({
+                                msg:"No avaible"
+                            })
+                        }
                     })
             }
         });
