@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/justinas/nosurf"
+	"github.com/kapi1023/bookingWebsite/internal/helpers"
 )
 
 // NoSurf add csrf protection to all POST request
@@ -22,4 +23,14 @@ func NoSurf(next http.Handler) http.Handler {
 // SessionLoad load and saves the session on every request
 func SessionLoad(next http.Handler) http.Handler {
 	return session.LoadAndSave(next)
+}
+
+func Auth(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !helpers.IsAuthenticated(r) {
+			session.Put(r.Context(), "error", "Log in first")
+			http.Redirect(w, r, "/user/login", http.StatusFound)
+		}
+		next.ServeHTTP(w, r)
+	})
 }

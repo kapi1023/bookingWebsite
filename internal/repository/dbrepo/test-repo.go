@@ -1,6 +1,7 @@
 package dbrepo
 
 import (
+	"errors"
 	"time"
 
 	"github.com/kapi1023/bookingWebsite/internal/models"
@@ -35,6 +36,21 @@ func (m *testDBRepo) SearchAvailalilityByDatesForAllRooms(start, end time.Time) 
 
 func (m *testDBRepo) GetRoomById(id int) (models.Room, error) {
 	var room models.Room
-
+	if id > 2 {
+		return room, errors.New("Room not found")
+	}
 	return room, nil
+}
+
+func (m *testDBRepo) GetUserById(id string) (models.User, error) {
+	var user models.User
+
+	return user, nil
+}
+func (m *testDBRepo) UpdateUser(user models.User) error {
+	return nil
+}
+func (m *testDBRepo) Authenticate(email, testPassword string) (int, string, error) {
+
+	return 1, "", nil
 }

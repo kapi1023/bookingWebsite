@@ -23,21 +23,20 @@ var theThest = []struct {
 	params             []postData
 	expectedStatusCode int
 }{
-	// {"home", "/", "GET", []postData{}, http.StatusOK},
-	// {"about", "/about", "GET", []postData{}, http.StatusOK},
-	// {"generalsQuarters", "/generals-quarters", "GET", []postData{}, http.StatusOK},
-	// {"majorsSuite", "/majors-suite", "GET", []postData{}, http.StatusOK},
-	// {"contact", "/contact", "GET", []postData{}, http.StatusOK},
-	// {"makeReservation", "/make-reservation", "GET", []postData{}, http.StatusOK},
-	// {"reservationSummary", "/reservation-summary", "GET", []postData{}, http.StatusOK},
-	// {"PostSearchAvailability", "/search-availability", "POST", []postData{{key: "start", value: "2020-01-01"}, {key: "end", value: "2020-01-04"}}, http.StatusOK},
-	// {"PostSearchAvailabilityJson", "/search-availability-json", "POST", []postData{{key: "start", value: "2020-01-01"}, {key: "end", value: "2020-01-04"}}, http.StatusOK},
-	// {"PostMakeReservation", "/make-reservation", "POST", []postData{
-	// 	{key: "first_name", value: "John"},
-	// 	{key: "last_name", value: "Smith"},
-	// 	{key: "email", value: "Smith@op.pl"},
-	// 	{key: "phone", value: "434232312"},
-	// }, http.StatusOK},
+	{"home", "/", "GET", []postData{}, http.StatusOK},
+	{"about", "/about", "GET", []postData{}, http.StatusOK},
+	{"generalsQuarters", "/generals-quarters", "GET", []postData{}, http.StatusOK},
+	{"majorsSuite", "/majors-suite", "GET", []postData{}, http.StatusOK},
+	{"contact", "/contact", "GET", []postData{}, http.StatusOK},
+	// 	{"reservationSummary", "/reservation-summary", "GET", []postData{}, http.StatusOK},
+	// 	{"PostSearchAvailability", "/search-availability", "POST", []postData{{key: "start", value: "2020-01-01"}, {key: "end", value: "2020-01-04"}}, http.StatusOK},
+	// 	{"PostSearchAvailabilityJson", "/search-availability-json", "POST", []postData{{key: "start", value: "2020-01-01"}, {key: "end", value: "2020-01-04"}}, http.StatusOK},
+	// 	{"PostMakeReservation", "/make-reservation", "POST", []postData{
+	// 		{key: "first_name", value: "John"},
+	// 		{key: "last_name", value: "Smith"},
+	// 		{key: "email", value: "Smith@op.pl"},
+	// 		{key: "phone", value: "434232312"},
+	// 	}, http.StatusOK},
 }
 
 func TestHandlers(t *testing.T) {
@@ -95,6 +94,30 @@ func TestRepository_Reservation(t *testing.T) {
 
 	handler.ServeHTTP(rr, req)
 	if rr.Code != http.StatusOK {
+		t.Error("Reservation handler return wrong response code: ", rr.Code)
+	}
+	//test case where reservation is not in session (reset everything)
+
+	req, _ = http.NewRequest("GET", "/make-reservation", nil)
+	ctx = getCtx(req)
+	req = req.WithContext(ctx)
+	rr = httptest.NewRecorder()
+
+	handler.ServeHTTP(rr, req)
+	if rr.Code != http.StatusTemporaryRedirect {
+		t.Error("Reservation handler return wrong response code: ", rr.Code)
+	}
+
+	//test with non-existing room
+
+	req, _ = http.NewRequest("GET", "/make-reservation", nil)
+	ctx = getCtx(req)
+	req = req.WithContext(ctx)
+	rr = httptest.NewRecorder()
+	reservation.RoomId = 100
+	session.Put(ctx, "reservation", reservation)
+	handler.ServeHTTP(rr, req)
+	if rr.Code != http.StatusTemporaryRedirect {
 		t.Error("Reservation handler return wrong response code: ", rr.Code)
 	}
 

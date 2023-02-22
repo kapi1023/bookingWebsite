@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
-	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -66,13 +66,15 @@ func (m *Repository) About(w http.ResponseWriter, r *http.Request) {
 func (m *Repository) Reservation(w http.ResponseWriter, r *http.Request) {
 	res, ok := m.App.Session.Get(r.Context(), "reservation").(models.Reservation)
 	if !ok {
-		helpers.ServerError(w, errors.New("cannot get reservation from session"))
+		m.App.Session.Put(r.Context(), "error", "Cant get reservation from session")
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 		return
 	}
 
 	room, err := m.DB.GetRoomById(res.RoomId)
 	if err != nil {
-		helpers.ServerError(w, err)
+		m.App.Session.Put(r.Context(), "error", "Cant find room")
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 		return
 	}
 	res.Room.RoomName = room.RoomName
@@ -100,7 +102,8 @@ func (m *Repository) Reservation(w http.ResponseWriter, r *http.Request) {
 func (m *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 	reservation, ok := m.App.Session.Get(r.Context(), "reservation").(models.Reservation)
 	if !ok {
-		helpers.ServerError(w, errors.New("can't get from session"))
+		m.App.Session.Put(r.Context(), "error", "Cant get reservation from session")
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 		return
 	}
 
@@ -149,15 +152,47 @@ func (m *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 	}
 	err = m.DB.InsertRoomRestriction(restriction)
 	if err != nil {
-		helpers.ServerError(w, err)
+		m.App.Session.Put(r.Context(), "error", "Cant insert room restriction")
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+		return
 	}
+
+	//Send notification to guest
+
+	htmlMessage := fmt.Sprintf(`
+	<strong>Reservation confiratmion</strong>
+	Dear %s: <br>
+	This is reservation confirmation from %s to %s.
+	`, reservation.FirstName, reservation.StartDate.Format("2006-01-02"), reservation.EndDate.Format("2006-01-02"))
+	msg := models.MailData{
+		To:       reservation.Email,
+		From:     "essa@ellstore.pl",
+		Subject:  "Reservation confirmation",
+		Content:  htmlMessage,
+		Template: "basic.html",
+	}
+	m.App.MailChannel <- msg
+
+	//Send notification to room owner
+	htmlMessage = fmt.Sprintf(`
+	<strong>Reservation Nofitication</strong>
+	A reservation has been made for %s from %s to %s.
+	`, reservation.Room.RoomName, reservation.StartDate.Format("2006-01-02"), reservation.EndDate.Format("2006-01-02"))
+	msg = models.MailData{
+		To:      "essa@ellstore.pl",
+		From:    "essa@ellstore.pl",
+		Subject: "Reservation Nofitication",
+		Content: htmlMessage,
+	}
+
+	m.App.MailChannel <- msg
 
 	m.App.Session.Put(r.Context(), "reservation", reservation)
 
 	http.Redirect(w, r, "/reservation-summary", http.StatusSeeOther)
 }
 
-// PostReservation renders the reservation form
+// Generals renders the reservation form
 func (m *Repository) Generals(w http.ResponseWriter, r *http.Request) {
 	render.Template(w, "generals.page.html", &models.TemplateData{}, r)
 }
@@ -355,4 +390,51 @@ func (m *Repository) BookRoom(w http.ResponseWriter, r *http.Request) {
 	log.Println(roomId, startDate, endDate)
 
 	http.Redirect(w, r, "/make-reservation", http.StatusSeeOther)
+}
+
+func (m *Repository) ShowLogin(w http.ResponseWriter, r *http.Request) {
+	render.Template(w, "login.page.html", &models.TemplateData{}, r)
+}
+
+func (m *Repository) PostShowLogin(w http.ResponseWriter, r *http.Request) {
+	_ = m.App.Session.RenewToken(r.Context())
+	err := r.ParseForm()
+	if err != nil {
+		log.Println(err)
+	}
+	email := r.Form.Get("email")
+	password := r.Form.Get("password")
+
+	form := forms.New(r.PostForm)
+	form.Required("email", "password")
+	form.IsEmail("email")
+	if !form.Valid() {
+		render.Template(w, "login.page.html", &models.TemplateData{
+			Form: form,
+		}, r)
+		return
+	}
+
+	id, _, err := m.DB.Authenticate(email, password)
+	if err != nil {
+		log.Println(err)
+		m.App.Session.Put(r.Context(), "error", "Invalid login credentials")
+		http.Redirect(w, r, "/user/login", http.StatusSeeOther)
+		return
+	}
+
+	m.App.Session.Put(r.Context(), "user_id", id)
+	m.App.Session.Put(r.Context(), "flash", "logged successfully")
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+func (m *Repository) Logout(w http.ResponseWriter, r *http.Request) {
+	_ = m.App.Session.Destroy(r.Context())
+	m.App.Session.Put(r.Context(), "flash", "logout successfully")
+	_ = m.App.Session.RenewToken(r.Context())
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+func (m *Repository) AdminDashboard(w http.ResponseWriter, r *http.Request) {
+	render.Template(w, "admin-dashboard.page.html", &models.TemplateData{}, r)
 }
