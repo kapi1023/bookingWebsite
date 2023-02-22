@@ -2,10 +2,12 @@ package dbrepo
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/kapi1023/bookingWebsite/internal/models"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func (m *postgresDBRepo) AllUsers() bool {
@@ -129,4 +131,69 @@ func (m *postgresDBRepo) GetRoomById(id int) (models.Room, error) {
 		return room, err
 	}
 	return room, nil
+}
+
+// GetUserById returns the user by id
+func (m *postgresDBRepo) GetUserById(id string) (models.User, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
+	defer cancel()
+	query := `select id,first_name,last_name,email,password,access_level,created_at,updated_at from users where id = $1`
+	row := m.DB.QueryRowContext(ctx, query, id)
+	var user models.User
+	err := row.Scan(
+		&user.Id,
+		&user.FirstName,
+		&user.LastName,
+		&user.Email,
+		&user.Password,
+		&user.AccessLevel,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+	)
+	if err != nil {
+		return user, err
+	}
+	return user, nil
+
+}
+
+// UpdateUser updates user in database
+func (m *postgresDBRepo) UpdateUser(user models.User) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
+	defer cancel()
+	query := `update user set first_name = $1, last_name = $2, email = $3,access_level = $4, updated_at = $5 from user`
+
+	_, err := m.DB.ExecContext(ctx, query,
+		user.FirstName,
+		user.LastName,
+		user.Email,
+		user.AccessLevel,
+		time.Now(),
+	)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// Authenicate authenicate a user
+func (m *postgresDBRepo) Authenticate(email, testPassword string) (int, string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
+	defer cancel()
+
+	var id int
+	var hashedPassword string
+	query := `select id, password from users where email = $1`
+	row := m.DB.QueryRowContext(ctx, query, email)
+	err := row.Scan(&id, &hashedPassword)
+	if err != nil {
+		return id, "", err
+	}
+	err = bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(testPassword))
+	if err == bcrypt.ErrMismatchedHashAndPassword {
+		return 0, "", errors.New("incorrect password")
+	} else if err != nil {
+		return 0, "", err
+	}
+	return id, hashedPassword, nil
 }

@@ -14,4 +14,7 @@ type DataBaseRepo interface {
 	SearchAvailalilityByDatesByRoomId(start, end time.Time, roomId int) (bool, error)
 	SearchAvailalilityByDatesForAllRooms(start, end time.Time) ([]models.Room, error)
 	GetRoomById(id int) (models.Room, error)
+	GetUserById(id string) (models.User, error)
+	UpdateUser(user models.User) error
+	Authenticate(email, testPassword string) (int, string, error)
 }
