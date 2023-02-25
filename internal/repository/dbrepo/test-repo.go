@@ -54,3 +54,10 @@ func (m *testDBRepo) Authenticate(email, testPassword string) (int, string, erro
 
 	return 1, "", nil
 }
+
+// Returns a slice of all reservations
+func (m *testDBRepo) AllReservations() ([]models.Reservation, error) {
+	var reservations []models.Reservation
+
+	return reservations, nil
+}

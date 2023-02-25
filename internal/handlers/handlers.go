@@ -438,3 +438,24 @@ func (m *Repository) Logout(w http.ResponseWriter, r *http.Request) {
 func (m *Repository) AdminDashboard(w http.ResponseWriter, r *http.Request) {
 	render.Template(w, "admin-dashboard.page.html", &models.TemplateData{}, r)
 }
+
+func (m *Repository) AdminNewReservations(w http.ResponseWriter, r *http.Request) {
+	render.Template(w, "admin-new-reservations.page.html", &models.TemplateData{}, r)
+}
+
+func (m *Repository) AdminAllReservations(w http.ResponseWriter, r *http.Request) {
+	reservations, err := m.DB.AllReservations()
+	if err != nil {
+		helpers.ServerError(w, err)
+	}
+	data := make(map[string]interface{})
+	data["reservations"] = reservations
+
+	render.Template(w, "admin-all-reservations.page.html", &models.TemplateData{
+		Data: data,
+	}, r)
+}
+
+func (m *Repository) AdminCalendarReservations(w http.ResponseWriter, r *http.Request) {
+	render.Template(w, "admin-reservations-callendar.page.html", &models.TemplateData{}, r)
+}

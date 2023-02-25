@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"net/http"
 	"path/filepath"
+	"time"
 
 	"github.com/justinas/nosurf"
 	"github.com/kapi1023/bookingWebsite/internal/config"
@@ -15,7 +16,9 @@ import (
 
 var pathToTemplates = "./templates"
 
-var functions = template.FuncMap{}
+var functions = template.FuncMap{
+	"humanDate": HumanDate,
+}
 
 var app *config.AppConfig
 
@@ -33,6 +36,11 @@ func AddDefaultData(td *models.TemplateData, r *http.Request) *models.TemplateDa
 		td.IsAuthenticated = 1
 	}
 	return td
+}
+
+// HumanDate returns time in YYYY-MM-DD format
+func HumanDate(t *time.Time) string {
+	return t.Format("2006-01-02")
 }
 
 // RenderTemplate renders a template
