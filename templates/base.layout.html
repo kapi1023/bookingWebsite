@@ -70,6 +70,7 @@
                 <li class="nav-item">
                     <a class="nav-link" href="/contact">Contact</a>
                 </li>
+<<<<<<< HEAD
                     <li class="nav-item">
                         {{if eq .IsAuthenticated 1}}
                         <li class="nav-item dropdown">
@@ -86,6 +87,15 @@
                         <a class="nav-link" href="/user/login">Login</a>
                         {{end}}
                     </li>
+=======
+                <li class="nav-item">
+                    {{if eq .IsAuthenticated 1}}
+                    <a class="nav-link" href="/user/logout">Logout</a>
+                    {{else}}
+                    <a class="nav-link" href="/user/login">Login</a>
+                    {{end}}
+                </li>
+>>>>>>> 0ee5efa69ced6a9f40a9f10360c8fd51ba4c5ea4
 
             </ul>
         </div>
